@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <title>Search Room</title>
+    <link rel="stylesheet" href="{% static 'man.css' %}">
+</head>
+<body>
+    <h1>Search Room</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Find Room</button>
+    </form>
+</body>
+</html>

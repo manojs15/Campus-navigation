@@ -1,0 +1,29 @@
+<!-- classroom_search.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <title>Find Classroom</title>
+    <link rel="stylesheet" href="{% static 'man.css' %}">
+</head>
+<body>
+    <h1>Find Classroom</h1>
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.id_for_label }}">Select Room Number:</label>
+            {{ form.as_p }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.id_for_label }}">Select Starting Point:</label>
+            {{ form.as_p }}
+        </div>
+        
+        <button type="submit">Find Classroom</button>
+    </form>
+</body>
+</html>

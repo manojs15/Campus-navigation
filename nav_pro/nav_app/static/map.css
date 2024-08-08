@@ -1,0 +1,97 @@
+/* General Styles */
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Arial', sans-serif;
+    }
+    
+    #mapCanvas {
+        height: 100vh; /* Full viewport height */
+        width: 100vw;  /* Full viewport width */
+        position: absolute; /* Position the map absolutely */
+        top: 0;
+        left: 0;
+        z-index: 1; /* Ensure it's behind the sidebar */
+    }
+    
+    #sidebarContainer {
+        width: 320px;
+        height: 100%;
+        position: absolute;
+        right: 0;
+        top: 0;
+        background-color: #ffffff;
+        box-shadow: -4px 0 10px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+        transform: translateX(100%); /* Hide container off-screen initially */
+        opacity: 0; /* Start hidden */
+    }
+    
+    #sidebarContainer.show {
+        transform: translateX(0); /* Slide in container */
+        opacity: 1; /* Make visible */
+    }
+    
+    #sidebar {
+        padding: 20px;
+        height: 100%;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+    }
+    
+    #sidebar h2 {
+        margin-top: 0;
+        color: #343a40; /* Darker color for headings */
+        font-size: 1.5rem;
+    }
+    #sidebar .sidebar-image {
+        width: 200px; /* Set a fixed width */
+        height: 150px; /* Set a fixed height */
+        object-fit: cover; /* Adjust how the image should be cropped */
+    }
+    
+   
+
+    #liveLocationButton {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: #ffffff;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        z-index: 1000;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+    
+    #liveLocationButton:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+    }
+    
+    #liveLocationButton:hover:not(:disabled) {
+        background-color: #0056b3; /* Darker blue on hover */
+    }
+    
+    #backButton {
+        display: block;
+        margin-bottom: 15px;
+        padding: 12px 24px;
+        background-color: #007bff;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+    
+    #backButton:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+    }
+

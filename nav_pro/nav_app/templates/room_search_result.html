@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room Search Result</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .map-container {
+            height: 400px;
+        }
+        .icon {
+            font-size: 1.5em;
+        }
+        .blinking-container {
+            animation: blinking 2s infinite; /* Apply blinking animation */
+        }
+        @keyframes blinking {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-body">
+                <div id="map" class="map-container mb-4"></div>
+                {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% else %}
+                    <h1 class="card-title">Room Search Result</h1>
+                    <div class="d-flex flex-wrap justify-content-between">
+                        <div class="card category-card blinking-container">
+                            <div class="card-body">
+                                <h5 class="card-title">Room Numbers</h5>
+                                <p><span class="icon">🏢</span> {{ room.number }}</p>
+                            </div>
+                        </div>
+                        <div class="card category-card blinking-container">
+                            <div class="card-body">
+                                <h5 class="card-title">Floor</h5>
+                                <p><span class="icon">📍</span> {{ room.floor }}</p>
+                            </div>
+                        </div>
+                        <div class="card category-card blinking-container">
+                            <div class="card-body">
+                                <h5 class="card-title">Building</h5>
+                                <p><span class="icon">🏢</span> {{ room.building.name }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% if path %}
+                        <h2 class="card-title">Path to Room</h2>
+                        <div class="d-flex flex-wrap justify-content-between">
+                            <div class="card category-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Start Location</h5>
+                                    <p><span class="icon">🚶‍♂️</span> {{ path.start_location.name }}</p>
+                                </div>
+                            </div>
+                            <div class="card category-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">End Location</h5>
+                                    <p><span class="icon">🏁</span> {{ path.end_location.name }}</p>
+                                </div>
+                            </div>
+                            <div class="card category-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Distance</h5>
+                                    <p><span class="icon">📏</span> {{ path.distance }} meters</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p>No path found from {{ start_location.name }} to {{ room.building.name }}</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (document.getElementById('map')) {
+                var map = L.map('map').setView([12.3657, 76.6866], 20);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                // Example waypoints, replace with actual data
+                var waypoints = {{ path.waypoints|safe }};
+                var latlngs = waypoints.map(function(point) {
+                    return [point[0], point[1]];
+                });
+
+                L.polyline(latlngs, { color: 'blue' }).addTo(map);
+
+                // Add image overlay
+                var imageUrl = '{% static "map_png.png" %}'; // Replace with your image path
+                var imageBounds = [[12.3645440, 76.6843800], [12.3672570, 76.6903040]]; // Replace with your image bounds
+                L.imageOverlay(imageUrl, imageBounds).addTo(map);
+            }
+        });
+    </script>
+</body>
+</html>

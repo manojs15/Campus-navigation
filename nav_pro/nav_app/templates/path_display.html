@@ -1,0 +1,58 @@
+<!-- path_display.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <title>Path Display</title>
+    <!-- Include Leaflet CSS and JavaScript -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+        #mapCanvas {
+            height: 600px; /* Adjust height as needed */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="mapCanvas"></div>
+
+    <script>
+        // Initialize the map
+        var map = L.map('mapCanvas').setView([12.3657, 76.6866], 15); // Adjust coordinates and zoom level
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        }).addTo(map);
+
+        // Define the bounds for your image overlay based on its geographic extent
+         var imageBounds = [
+            [12.364599458, 76.684533178], // Southwest corner of your image
+            [12.36718928293858, 76.69011819613451]  // Northeast corner of your image
+        ];
+
+        // Add your PNG file as a raster overlay
+        var pngLayer = L.imageOverlay('{% static "map_png.png" %}', imageBounds).addTo(map);
+
+        // Example path coordinates
+        var pathCoordinates = [
+            [12.3658236, 76.6858773],
+            [12.3656482, 76.6858962],
+            [12.3656704, 76.6861621],
+            [12.3657073, 76.6866081],
+            [12.3657387, 76.6872684],
+            [12.365568, 76.687282]
+        ];
+
+        // Draw the path
+        var pathLine = L.polyline(pathCoordinates, { color: 'red' }).addTo(map);
+        map.fitBounds(pathLine.getBounds());
+
+        // Add controls like zoom, scale, etc.
+        L.control.scale().addTo(map);
+    </script>
+
+</body>
+</html>

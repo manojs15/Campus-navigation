@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <title>Path Display</title>
+    <!-- Include Leaflet CSS and JavaScript -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="{% static 'leaflet.polyline.snakeanim.js' %}"></script>
+    <script src="https://unpkg.com/leaflet-dashed-polyline/Leaflet.DashedPolyline.js"></script>
+
+    <style>
+        #mapCanvas {
+            height: 600px; /* Adjust height as needed */
+        }
+        .custom-popup {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 8px;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+        .custom-popup h3 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #007bff;
+        }
+        .custom-popup p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .custom-popup img {
+            width: 60%;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="mapCanvas"></div>
+    <script>
+        // Initialize the map with appropriate coordinates and zoom level
+        var map = L.map('mapCanvas').setView([12.3657, 76.6866], 20); // Adjust coordinates and zoom level
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        }).addTo(map);
+
+        // Fetch waypoints data from Django context
+        var waypoints = JSON.parse('{{ waypoints|escapejs }}');
+        // Prepare path coordinates from waypoints
+        var pathCoordinates = [];
+
+        for (var i = 0; i < waypoints.length; i++) {
+            pathCoordinates.push([waypoints[i][0], waypoints[i][1]]);
+        }
+//-------------------------------------------------------------------------------
+        // Define the bounds for your image overlay based on its geographic extent
+        var imageBounds = [
+            [12.3645440, 76.6843800], // Southwest corner of your image
+            [12.3672570, 76.6903040]  // Northeast corner of your image
+        ];
+
+        // Add your PNG file as a raster overlay
+        var pngLayer = L.imageOverlay('{% static "map_png.png" %}', imageBounds).addTo(map);
+
+        // Adjust the map view to fit the image bounds
+        map.fitBounds(imageBounds);
+
+//-----------------------------------------------------------------------------------
+       
+//=========================================================================================
+// Define a custom red balloon icon
+var redBalloonIcon = L.icon({
+            iconUrl: '{% static "gifs/live.gif" %}', // Make sure to put the icon in your static directory
+            iconSize: [125, 100], // Adjust size as needed
+            iconAnchor: [55, 70], // Anchor the icon to the bottom center (depends on your icon's shape)
+            popupAnchor: [0, -32] // Position the popup above the icon
+        });
+//==================================destination viewing=============================================================
+            function getPopupContent(endLocation) {
+            var content = '';
+            var destinations = [
+                { coords: [12.3656825,76.6880693], type: 'parking' },
+                { coords: [12.365506,76.686176], type: 'bus_stand' },
+                // Add more destinations as needed
+            ];
+            // Find matching destination type based on coordinates
+            var destinationType = 'default'; // Default type if no match found
+            for (var i = 0; i < destinations.length; i++) {
+                if (destinations[i].coords[0] === endLocation[0] && destinations[i].coords[1] === endLocation[1]) {
+                    destinationType = destinations[i].type;
+                    break;
+                }
+            }
+            switch (destinationType) {
+                case 'parking':
+                    content = `
+                        <div class="custom-popup">
+                            <h3>Parking</h3>
+                            <p>This is the parking area.</p>
+                            <img src="{% static 'parking.jpg' %}" alt="Parking Image">
+                        </div>`;
+                    break;
+
+                case 'bus_stand':
+                content = `
+                    <div class="custom-popup">
+                        <h3>bus</h3>
+                        <p>This is the bus stand.</p>
+                        <img src="{% static 'image.png' %}" alt="bus Image">
+                    </div>`;
+                break;
+                // Add more cases for other destination types as needed
+                default:
+                    content = `
+                        <div class="custom-popup">
+                            <h3>Destination</h3>
+                            <p>This is the final destination of your route.</p>
+                            <img src="{% static 'default_destination_image.jpg' %}" alt="Destination Image">
+                        </div>`;
+                    break;
+            }
+            return content;
+        }
+       
+//==========================other location=====================================================
+        // Define icons for each location type
+var icons = {
+    'MBA': L.icon({
+        iconUrl: '{% static "mba2.png" %}',
+        iconSize: [19, 19],
+        iconAnchor: [15, 30],
+        popupAnchor: [0, -30]
+    }),
+    'play ground': L.icon({
+        iconUrl: '{% static "pg2.png" %}',
+        iconSize: [19, 19],
+        iconAnchor: [40, -10],
+        popupAnchor: [0, -30]
+    }),
+    'bus stand': L.icon({
+        iconUrl: '{% static "image.png" %}',
+        iconSize: [19, 19],
+        iconAnchor: [40, -10],
+        popupAnchor: [0, -30]
+    })
+    // Add more icons as needed
+};
+// Define locations with coordinates and names
+var locations = [
+    { coords: [12.3659905, 76.6875475], name: 'MBA',description: 'This is the MBA building. It houses the Business Administration department.',
+    image: '{% static "mba2.png" %}' },
+    { coords: [12.365568, 76.687282], name: 'play ground', description: 'This is the playground where students gather for recreational activities.',
+    image: '{% static "pg2.png" %}' },
+    { coords: [12.365506, 76.686176], name: 'bus stand',description: 'This is the bus stand where students catch buses to commute.',
+    image: '{% static "image.png" %}' }
+    // Add more locations as needed
+];
+// Add markers for each location with icons and popups
+locations.forEach(function(location) {
+    var marker = L.marker(location.coords, { icon: icons[location.name] }).addTo(map);
+    marker.bindPopup(
+        '<div class="custom-popup">' +
+        '<h3>' + location.name + '</h3>' +
+        '<p>' + location.description + '</p>' +
+        '<img src="' + location.image + '" alt="' + location.name + ' Image">' +
+        '</div>'
+    );
+    marker.on('mouseover', function(e) {
+        this.openPopup();
+    }); 
+
+    // Close popup when mouse moves out of the marker
+    marker.on('mouseout', function(e) {
+        this.closePopup();
+    });
+});
+//=========================================================================================
+ // Draw the path
+ var pathLine = L.polyline(pathCoordinates, { color: 'red',weight: 8 }).addTo(map);
+        map.fitBounds(pathLine.getBounds());
+        L.control.scale().addTo(map);
+
+// Function to interpolate between points
+function interpolate(from, to, factor) {
+        return [
+            from[0] + (to[0] - from[0]) * factor,
+            from[1] + (to[1] - from[1]) * factor
+        ];
+    }
+
+    // Function to smoothly draw the path
+    function animatePath(latlngs, index, steps, interval) 
+    {
+        if (index < latlngs.length - 1) 
+        {
+            let step = 0;
+            function drawStep() 
+            {
+                if (step <= steps) {
+                    const factor = step / steps;
+                    const interpolatedPoint = interpolate(latlngs[index], latlngs[index + 1], factor);
+                    pathLine.addLatLng(interpolatedPoint);
+                    step++;
+                    setTimeout(drawStep, interval);
+                } 
+                else {
+                    animatePath(latlngs, index + 1, steps, interval);
+                }
+            }
+            drawStep();
+        } 
+        else 
+        { // Add the red balloon marker at the end location with a styled popup
+        var endLocation = pathCoordinates[pathCoordinates.length - 1];
+        var endMarker = L.marker(endLocation, { icon: redBalloonIcon }).addTo(map).bindPopup(
+            getPopupContent(endLocation)
+        );
+        }
+    }
+    
+
+    // Start animating the path with 50 steps between points and a delay of 30ms per step
+    pathLine.setLatLngs([]);
+    animatePath(pathCoordinates, 0, 30, 15);
+//=============================================================================================
+// Create and animate dotted line
+var dottedLine = L.polyline(pathCoordinates, {
+            color: 'black',
+            dashArray: '5, 10', // Pattern for dashed line
+            weight: 3
+        }).addTo(map);
+
+        var dashOffset = 0;
+        function animateDottedLine() {
+            dottedLine.setStyle({
+                dashOffset: dashOffset
+            });
+            dashOffset--;
+            if (dashOffset < -15) { // Adjust based on dash pattern length
+                dashOffset = 0;
+            }
+            requestAnimationFrame(animateDottedLine);
+        }
+
+        animateDottedLine();
+ //==========================================================================================
+        // Define a custom GIF icon
+        var gifIcon = L.icon({
+            iconUrl: '{% static "gifs/stpt2.gif" %}', // Replace with your GIF file path
+            iconSize: [70, 70], // Adjust size as needed
+            iconAnchor: [35, 35], // Anchor the icon to the center (depends on your icon's shape)
+            popupAnchor: [0, -25] // Position the popup above the icon
+        });
+
+        // Add the GIF icon marker at the starting point
+        var startLocation = pathCoordinates[0];
+        var startMarker = L.marker(startLocation, { icon: gifIcon }).addTo(map).bindPopup(
+            '<div class="custom-popup">' +
+            '<h3>Starting Point</h3>' +
+            '<p>This is the starting point of your route.</p>' +
+            '</div>'
+        );
+
+
+        // Live location feature
+    var liveLocationMarker;
+    function onLocationFound(e) {
+        var latlng = [e.latitude, e.longitude];
+        if (liveLocationMarker) {
+            map.removeLayer(liveLocationMarker);
+        }
+        liveLocationMarker = L.marker(latlng, { icon: L.icon({ iconUrl: '{% static "gifs/live_location.gif" %}', iconSize: [50, 50] }) }).addTo(map);
+        map.setView(latlng, 20);
+    }
+
+    function onLocationError(e) {
+        alert(e.message);
+    }
+
+    // Request live location
+    function getLiveLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(onLocationFound, onLocationError, { enableHighAccuracy: true });
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    // Start live location tracking
+    getLiveLocation();
+
+    </script>
+
+</body>
+</html>

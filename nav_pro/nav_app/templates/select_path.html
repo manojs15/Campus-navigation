@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <title>Select Path</title>
+    <link rel="stylesheet" href="{% static 'man.css' %}">
+    <style>
+        /* General Styles */
+html,body {
+    font-family: Arial, sans-serif;
+    background-color: #e9c5c5; /* Light background color for the whole page */
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    color: #333; /* Darker text color for better readability */
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Form Styles */
+form {
+    background-color: #fff; /* White background for the form */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    max-width: 600px; /* Maximum width of the form */
+    margin: 0 auto; /* Center the form horizontally */
+    padding: 20px; /* Add padding inside the form */
+}
+
+.form-group {
+    margin-bottom: 15px; /* Spacing between form elements */
+}
+
+label {
+    display: block;
+    font-weight: bold; /* Make labels bold */
+    margin-bottom: 5px; /* Space below the label */
+}
+
+input, select, button {
+    width: 100%; /* Full width for inputs and buttons */
+    padding: 10px;
+    margin: 5px 0; /* Space around input elements */
+    border: 1px solid #ccc; /* Light border color */
+    border-radius: 4px; /* Rounded corners for inputs */
+    box-sizing: border-box; /* Ensure padding and border are included in the width */
+}
+
+button {
+    background-color: #007bff; /* Blue background color */
+    color: white; /* White text color */
+    border: none; /* Remove border */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 16px; /* Larger font size */
+}
+
+button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+</style>
+</head>
+<body>
+    <h1>Select Path</h1>
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Assuming `form` is your Django form object -->
+        <div class="form-group">
+            <label for="{{ form.id_for_label }}">Label for Som Field:</label>
+            {{ form.as_p }}
+        </div>
+        
+        <!-- Add more form fields as needed -->
+        
+        <button type="submit">Find Path</button>
+    </form>
+</body>
+</html>

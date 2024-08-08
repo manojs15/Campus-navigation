@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <title>College Map</title>
+    <!-- Include Leaflet CSS and JavaScript -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="{% static 'map.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" /> <!-- FontAwesome for icons -->
+</head>
+<body>
+    <div id="mapCanvas"></div>
+    <div id="sidebarContainer">
+        <button id="backButton">Back</button>
+        <div id="sidebar">
+            <h2>Place Details</h2>
+            <div id="placeInfo"></div>
+        </div>
+    </div>
+    <button id="liveLocationButton"> <i class="fas fa-location-arrow"></i></button>
+
+    <script>
+        // Function to generate star rating HTML
+        function generateStarRating(rating) {
+            let stars = '';
+            const fullStar = '<i class="fas fa-star"></i>';
+            const halfStar = '<i class="fas fa-star-half-alt"></i>';
+            const emptyStar = '<i class="far fa-star"></i>';
+    
+            const fullStarsCount = Math.floor(rating);
+            const hasHalfStar = rating % 1 !== 0;
+            const emptyStarsCount = 5 - fullStarsCount - (hasHalfStar ? 1 : 0);
+    
+            stars += fullStar.repeat(fullStarsCount);
+            if (hasHalfStar) {
+                stars += halfStar;
+            }
+            stars += emptyStar.repeat(emptyStarsCount);
+    
+            return stars;
+        }
+    
+        // Initialize the map
+        var map = L.map('mapCanvas').setView([12.3657, 76.6866], 20);
+    
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+    
+        // Define the bounds for your image overlay based on its geographic extent
+        var imageBounds = [
+            [12.3645440, 76.6843800], // Southwest corner of your image
+            [12.3672570, 76.6903040]  // Northeast corner of your image
+        ];
+    
+        // Add your PNG file as a raster overlay
+        var pngLayer = L.imageOverlay('{% static "map_png.png" %}', imageBounds).addTo(map);
+    
+        // Adjust the map view to fit the image bounds
+        map.fitBounds(imageBounds);
+    
+        // Fetch locations data from Django context
+        var locations = JSON.parse('{{ locations|escapejs }}');
+    
+        // Add markers for each location
+        locations.forEach(function(location) {
+            var popupContent = `
+                <div>
+                    <h3>${location.name}</h3>
+                    <p>${location.description || ''}</p>
+                    <img src="${location.image}" alt="${location.name} Image" style="max-width: 400px; height: 200px; object-fit: cover;">
+                </div>`;
+            var marker = L.marker(location.coords).addTo(map).bindPopup(popupContent);
+    
+            // Open the popup by default to show the name and logo
+            marker.openPopup();
+    
+            // Optionally, show the name on hover
+           
+                // Optionally, show the name on hover
+                marker.on('mouseover', function() {
+                    marker.openPopup();
+                });
+            marker.on('mouseout', function() {
+                marker.closePopup();
+            });
+    
+            // Show detailed information in the sidebar on click
+            marker.on('click', function() {
+                document.getElementById('sidebarContainer').classList.add('show');
+                document.getElementById('placeInfo').innerHTML = `
+                    <h2>${location.name}</h2>
+                    <p>${location.description || ''}</p>
+                    <img src="${location.image}" alt="${location.name} Image" style="max-width: 400px; height: 200px; object-fit: cover;">
+                    <p><strong>Rating:</strong> ${location.rating ? generateStarRating(location.rating) : 'N/A'}</p>
+                    <p><strong>Status:</strong> ${location.open_status || 'N/A'}</p>
+                    <p><strong>Reviews:</strong> ${location.reviews || 'No reviews'}</p>
+                `;
+            });
+        });
+    
+        // Add live location feature
+        var liveLocationMarker;
+    
+        document.getElementById('liveLocationButton').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                this.disabled = true;
+                var icon = this.querySelector('i'); // Get the icon element
+                icon.classList.remove('fa-location-arrow');
+                icon.classList.add('fa-spinner', 'fa-spin'); // Change to spinner icon
+    
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var lat = position.coords.latitude;
+                    var lon = position.coords.longitude;
+    
+                    // If there's already a live location marker, remove it
+                    if (liveLocationMarker) {
+                        map.removeLayer(liveLocationMarker);
+                    }
+    
+                    // Add marker for live location
+                    liveLocationMarker = L.marker([lat, lon], {
+                        icon: L.icon({
+                            iconUrl: '{% static "gifs/lives.png" %}', // Update with your live location icon
+                            iconSize: [50, 50], // Adjust size as needed
+                            iconAnchor: [25, 50], // Anchor the icon to the bottom center
+                            popupAnchor: [0, -40] // Position the popup above the icon
+                        })
+                    }).addTo(map).bindPopup('<div class="custom-popup"><h3>Your Location</h3><p>This is your current location.</p></div>');
+    
+                    map.setView([lat, lon], 20); // Center the map on the live location
+    
+                     // Reset the button
+                     icon.classList.remove('fa-spinner', 'fa-spin');
+                    icon.classList.add('fa-location-arrow');
+                    document.getElementById('liveLocationButton').disabled = false;
+                }, function() {
+                    alert('Unable to retrieve your location.');
+                    icon.classList.remove('fa-spinner', 'fa-spin');
+                    icon.classList.add('fa-location-arrow');
+                    document.getElementById('liveLocationButton').disabled = false;
+                });
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        });
+    
+        // JavaScript for the back button
+        document.getElementById('backButton').addEventListener('click', function() {
+            document.getElementById('sidebarContainer').classList.remove('show');
+        });
+    </script>
+</body>
+</html>

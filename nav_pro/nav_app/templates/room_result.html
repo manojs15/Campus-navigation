@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <title>Room and Location Search Results</title>
+    <!-- Include Leaflet CSS and JavaScript -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="{% static 'map.css' %}">
+</head>
+<body>
+    <div id="mapCanvas" style="height: 100vh;"></div>
+
+    <script>
+        // Initialize the map centered around a default location and zoom level
+        var map = L.map('mapCanvas').setView([12.3657, 76.6866], 16); // Adjust default center and zoom level as needed
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+        // Define the bounds for your image overlay (adjust as needed)
+        var imageBounds = [
+            [12.3645440, 76.6843800], // Southwest corner of your image
+            [12.3672570, 76.6903040]  // Northeast corner of your image
+        ];
+        // Add your PNG file as a raster overlay (make sure the file exists in the static folder)
+        var pngLayer = L.imageOverlay('{% static "map_png.png" %}', imageBounds).addTo(map);
+        // Adjust the map view to fit the image bounds
+        map.fitBounds(imageBounds);
+        // Fetch locations data from Django context and parse it
+        var locations = JSON.parse('{{ loca|escapejs }}');
+        var rooms = JSON.parse('{{ roo|escapejs }}');
+        // Check if locations data is available
+        if (locations && Array.isArray(locations)) {
+            locations.forEach(function(location) {
+                var popupContent = `
+                    <div>
+                        <h3>${location.name}</h3>
+                        <p>${location.description || ''}</p>
+                        <img src="${location.image || '{% static "default_image.png" %}'}" alt="${location.name} Image" style="max-width: 400px; height: 200px; object-fit: cover;">
+                    </div>`;
+                
+                // Add a marker for each location
+                L.marker([location.X, location.y]).addTo(map).bindPopup(popupContent);
+            });
+        } else {
+            console.log('No locations data found or invalid format.');
+        }
+        // Check if rooms data is available
+        if (rooms && Array.isArray(rooms)) {
+            rooms.forEach(function(room) {
+                var popupContent = `
+                    <div>
+                        <h3>Room ${room.number}</h3>
+                        <p>Floor: ${room.floor || ''}</p>
+                        <p>Building: ${room['building__name'] || ''}</p>
+                        <p>Coordinates: [${room['building__X']}, ${room['building__y']}]</p>
+                    </div>`;
+                
+                // Add a marker for each room's building location
+                L.marker([room['building__X'], room['building__y']]).addTo(map).bindPopup(popupContent);
+            });
+        } else {
+            console.log('No rooms data found or invalid format.');
+        }
+    </script>
+</body>
+</html>
